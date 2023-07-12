@@ -3,6 +3,7 @@
 .dirstamp
 .gdb_history
 .libs/
+.tox/
 .*.swp
 *.pyc
 tags
