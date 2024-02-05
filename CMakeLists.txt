@@ -609,6 +609,8 @@ if(OPENSCAP_PROBE_INDEPENDENT_YAMLFILECONTENT)
 	set_oscap_generic_properties(yamlfilter_object)
 endif()
 
+include(SetRPATH)  # mainly for development workflows and non-system install paths
+
 add_subdirectory("compat")
 add_subdirectory("src")
 add_subdirectory("utils")
