@@ -14,12 +14,8 @@ BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  swig libxml2-devel libxslt-devel perl-generators perl-XML-Parser
 BuildRequires:  rpm-devel
-BuildRequires:  libgcrypt-devel
-%if 0%{?fedora}
+BuildRequires:  nss-devel
 BuildRequires:  pcre2-devel
-%else
-BuildRequires:  pcre-devel
-%endif
 BuildRequires:  libacl-devel
 BuildRequires:  libselinux-devel
 BuildRequires:  libcap-devel
@@ -131,16 +127,13 @@ Tool for scanning Atomic containers.
 
 %build
 %undefine __cmake_in_source_build
-# gconf is a legacy system not used any more, and it blocks testing of oscap-anaconda-addon
-# as gconf is no longer part of the installation medium
 %cmake \
 %if 0%{?fedora}
     -DWITH_PCRE2=ON \
 %endif
     -DENABLE_PERL=OFF \
-    -DENABLE_DOCS=ON \
-    -DOPENSCAP_PROBE_UNIX_GCONF=OFF \
-    -DGCONF_LIBRARY=
+    -DWITH_CRYPTO=nss \
+    -DENABLE_DOCS=ON
 %cmake_build
 make docs
 
@@ -155,7 +148,7 @@ ctest -V %{?_smp_mflags}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 # fix python shebangs
-%if 0%{?fedora}
+%if 0%{?rhel} >= 10 || 0%{?fedora}
 %{__python3} %{_rpmconfigdir}/redhat/pathfix.py -i %{__python3} -p -n $RPM_BUILD_ROOT%{_bindir}/scap-as-rpm
 %else
 pathfix.py -i %{__python3} -p -n $RPM_BUILD_ROOT%{_bindir}/scap-as-rpm
