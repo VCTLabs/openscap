@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8...3.19)
+cmake_minimum_required(VERSION 3.18)
 
 # Inspired and referenced from https://blog.kitware.com/cmake-and-the-default-build-type
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -87,8 +87,6 @@ if(ACL_FOUND)
 	check_include_file(acl/libacl.h HAVE_ACL_LIBACL_H)
 	check_include_file(sys/acl.h HAVE_SYS_ACL_H)
 endif()
-
-find_package(AptPkg)
 
 find_package(Blkid)
 if(BLKID_FOUND)
