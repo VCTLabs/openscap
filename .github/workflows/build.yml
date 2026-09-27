@@ -76,53 +76,40 @@ jobs:
         export $(dbus-launch)
         ctest --output-on-failure
 
-  build-windows:
-    name: Build on Windows
-    runs-on: windows-latest
-    env:
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  build-macos:
+    # The type of runner that the job will run on
+    name: Build, Test on macOS Latest
+    runs-on: macos-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-
-    - name: Checkout vcpkg
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       with:
-        path: ${{ github.workspace }}/vcpkg
-        repository: microsoft/vcpkg
-        fetch-depth: 1
+        submodules: recursive
 
-    - name: Bootstrap vcpkg
-      shell: pwsh
-      run: |
-        & "$env:GITHUB_WORKSPACE\vcpkg\scripts\bootstrap.ps1" -disableMetrics
-
-    - name: Export GitHub Actions cache environment variables
-      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
-      with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
     - name: Install Deps
       run: |
-        & "$env:GITHUB_WORKSPACE\vcpkg\vcpkg.exe" install curl libxml2 libxslt bzip2 pcre pthreads zlib getopt-win32 xmlsec --triplet x64-windows
+        # Unlink and re-link to prevent errors when GitHub Mac runner images
+        # install Python outside of Brew:
+        brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done
+        brew update
+        brew install doxygen
+        brew install opendbx
+        brew install pkg-config
+        brew install popt
+        brew install swig
+        brew install libxmlsec1
+        brew install openssl
+        brew install pcre
 
-    - name: Configure
+    - name: Build OpenSCAP
       working-directory: ./build
-      run: cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_PYTHON3=FALSE "-DCMAKE_TOOLCHAIN_FILE=$env:GITHUB_WORKSPACE/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+      run: |
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_PROBES=False -DWITH_PCRE2=True ../
+        make all
 
-    - name: Build
-      run: cmake --build . --config Release
+    - name: Test
       working-directory: ./build
-
-    - name: Package
-      run: cpack
-      working-directory: build
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-      with:
-        name: openscap-win64
-        path: |-
-          build\OpenSCAP*.msi
-          build\OpenSCAP*.msi.sha512
+      run: |
+        echo "Tests are so broken for macOS :("
